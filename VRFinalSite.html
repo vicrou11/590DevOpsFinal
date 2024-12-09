@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this template
+-->
+<html>
+    
+        <title>Generate a Palette!</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+        <style>
+            body {
+                height: 100vh;
+                margin: 0;
+                background-color: #e3dac9;
+            }
+            .box {
+                width: 100px;
+                height: 100px;
+                box-sizing: border-box;
+                transition: background-color 0.5s ease;
+                font-family: 'Georgia', serif;
+                text-align: center;
+            }
+            .bigButton {
+                width: 100px;
+                height: 50px;
+                border: 1px;
+                border-radius: 10px;
+                background-color: #faf0e6;
+                font-family: 'Georgia', serif;
+            }
+            .palette {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                max-width: 300px;
+            }
+            .titleBox {
+                margin: auto;
+                position: relative;
+                text-align: center;
+                border-radius: 10px;
+                background-color: #c3b091;
+            }
+            .buttonContainer {
+                padding: 3px;
+            }
+        </style>
+    
+    <body>
+        <div class="titleBox">
+            <h1>Generate a Palette!</h1>
+        </div>
+        <div class="buttonContainer">
+            <button id="testButton" class="bigButton" onclick="getPalette()">Generate!</button>
+            <button id="saveButton" class="bigButton" onclick="savePalette()">Save!</button>
+        </div>
+
+        <div class="palette" id="paletteBox">
+            <div class ="box" id="box1"></div>
+            <div class ="box" id="box2"></div>
+            <div class ="box" id="box3"></div>
+            <div class ="box" id="box4"></div>
+            <div class ="box" id="box5"></div>
+            <div class ="box" id="box6"></div>
+        </div>
+        
+        <div class ="buttonContainer">
+            Further generation:
+            <button id="greyscaleButton" class="bigButton" onclick="getGrayscalePalette()">Grayscale</button>
+            <button id="pastelButton" class="bigButton" onclick="getPastelPalette()">Pastel</button>
+            <button id="warmButton" class="bigButton" onclick="getWarmPalette()">Warm Colors</button>
+            <button id="coolButton" class="bigButton" onclick="getCoolPalette()">Cool Colors</button>
+            <button id="neutralButton" class="bigButton" onclick="getNeutralPalette()">Neutrals</button>
+        </div>
+        <div class ="buttonContainer">
+            Color Specific:
+            <button id="redButton" class="bigButton" onclick="getRedPalette()">Mostly Red</button>
+            <button id="blueButton" class="bigButton" onclick="getBluePalette()">Mostly Blue</button>
+            <button id="greenButton" class="bigButton" onclick="getGreenPalette()">Mostly Green</button>
+        </div>
+
+        <script>
+            function rgbToHex(r, g, b) {
+                const toHex = value => {
+                const hex = value.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+
+            const hexR = toHex(r);
+            const hexG = toHex(g);
+            const hexB = toHex(b);
+
+            return `#${hexR}${hexG}${hexB}`;
+            }
+            
+            function hslToRgb(h, s, l) {
+                let r, g, b;
+
+                if (s === 0) {
+                r = g = b = l; // achromatic
+                }
+                else {
+                    const hue2rgb = (p, q, t) => {
+                        if (t < 0) t += 1;
+                        if (t > 1) t -= 1;
+                        if (t < 1 / 6) return p + (q - p) * 6 * t;
+                        if (t < 1 / 2) return q;
+                        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                    };
+
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+                }
+
+                return {
+                    r: Math.round(r * 255),
+                    g: Math.round(g * 255),
+                    b: Math.round(b * 255)
+                };
+            }
+            
+            function generateColor() {
+                //hexCharacters
+                const hexCharacters = [0,1,2,3,4,5,6,7,8,9,"A","B","C","D","E","F"];
+                
+                function getCharacter(index) {
+                    return hexCharacters[index];
+                }
+                
+                let randColor = "#";
+                
+                for (let index = 0; index<6; index++) {
+                    const colorVariable = Math.floor(Math.random() * hexCharacters.length);
+                    randColor += getCharacter(colorVariable);
+                }
+                return randColor;
+            }
+            
+            function generateGrayscale() {
+                //const randomValue = Math.floor(Math.random() * 256);
+                //const grayscaleColor = rgbToHex(randomValue, randomValue, randomValue);
+                const hue = Math.random() * 360;
+                const saturation = 1; //complete desaturation for grayscale colors
+                const lightness = Math.random() * 100;
+                
+                const {r, g, b} = hslToRgb(hue/360, saturation/100, lightness/100);
+                const grayscaleColor = rgbToHex(r, g, b);
+                
+                return grayscaleColor;
+            }
+            
+            function generatePastel() {
+                const r = Math.floor(Math.random() * 128) + 128; 
+                const g = Math.floor(Math.random() * 128) + 128; 
+                const b = Math.floor(Math.random() * 128) + 128;
+                const pastelColor = rgbToHex(r, g, b);
+                return pastelColor;
+            }
+            
+            function getPastelPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const pastelColor = generatePastel();
+                    box.style.backgroundColor = pastelColor;
+                    colorCodes.push(pastelColor);
+                    box.textContent = `${pastelColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function getGrayscalePalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const graycolor = generateGrayscale();
+                    box.style.backgroundColor = graycolor;
+                    colorCodes.push(graycolor);
+                    box.textContent = `${graycolor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function getPalette () {
+                const colorCodes = [];
+                
+                const boxes = document.querySelectorAll('.box');
+                boxes.forEach((box) => {
+                    const color = generateColor();
+                    box.style.backgroundColor = color;
+                    colorCodes.push(color);
+                    box.textContent = `${color}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function savePalette() {
+                const canvas = document.getElementById('paletteBox');
+                html2canvas(canvas).then(canvas => {
+                const dataURL = canvas.toDataURL('image/png');
+        
+                const downloadLink = document.createElement('a');
+                downloadLink.href = dataURL;
+                downloadLink.download = 'newcolorpalette.png';
+        
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                });
+            }
+            
+            function generateReds () {
+                const r = Math.floor(Math.random() * 56) + 200;
+                const g = Math.floor(Math.random() * 256);
+                const b = Math.floor(Math.random() * 256);
+                const redColor = rgbToHex(r, g, b);
+                return redColor;
+            }
+            
+            function generateBlues () {
+                const b = Math.floor(Math.random() * 56) + 200;
+                const g = Math.floor(Math.random() * 256);
+                const r = Math.floor(Math.random() * 256);
+                const blueColor = rgbToHex(r, g, b);
+                return blueColor;
+            }
+            
+            function generateGreens () {
+                const g = Math.floor(Math.random() * 56) + 200;
+                const b = Math.floor(Math.random() * 256);
+                const r = Math.floor(Math.random() * 256);
+                const greenColor = rgbToHex(r, g, b);
+                return greenColor;
+            }
+            
+            function getRedPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const redColor = generateReds();
+                    box.style.backgroundColor = redColor;
+                    colorCodes.push(redColor);
+                    box.textContent = `${redColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function getBluePalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const blueColor = generateBlues();
+                    box.style.backgroundColor = blueColor;
+                    colorCodes.push(blueColor);
+                    box.textContent = `${blueColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function getGreenPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const greenColor = generateGreens();
+                    box.style.backgroundColor = greenColor;
+                    colorCodes.push(greenColor);
+                    box.textContent = `${greenColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function generateWarm() {
+                const hue = Math.floor(Math.random() * 31) + 30; //don't adjust
+                const saturation = Math.floor(Math.random() * 39) + 60; //ideal range
+                const lightness = Math.floor(Math.random() * 44) + 40; //ideal range
+                
+                const {r, g, b} = hslToRgb(hue/360, saturation/100, lightness/100);
+                
+                const warmColor = rgbToHex(r, g, b);
+                return warmColor;
+            }
+            
+            function generateCool() {
+                const hue = Math.floor(Math.random() * 61) + 180; //don't adjust
+
+                const saturation = Math.floor(Math.random() * 1) + 60; //ideal range
+                const lightness = Math.floor(Math.random() * 60) + 20; //ideal range
+
+                const { r, g, b } = hslToRgb(hue/360, saturation/100, lightness/100);
+
+                const coolColor = rgbToHex(r, g, b);
+                return coolColor;
+            }
+            
+            function getWarmPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const warmColor = generateWarm();
+                    box.style.backgroundColor = warmColor;
+                    colorCodes.push(warmColor);
+                    box.textContent = `${warmColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function getCoolPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const coolColor = generateCool();
+                    box.style.backgroundColor = coolColor;
+                    colorCodes.push(coolColor);
+                    box.textContent = `${coolColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+            
+            function generateNeutral() {
+                const lightness = Math.floor(Math.random() * 61) + 20; // 20 to 80
+                const saturation = Math.floor(Math.random() * 21) + 10; // 10 to 30
+                const hue = Math.floor(Math.random() * 45) + 0;
+                
+                const { r, g, b } = hslToRgb(hue/360, saturation/100, lightness/100);
+                
+                const neutralColor = rgbToHex(r, g, b);
+                return neutralColor;
+            }
+            
+            function getNeutralPalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+                
+                boxes.forEach((box) => {
+                    const neutralColor = generateNeutral();
+                    box.style.backgroundColor = neutralColor;
+                    colorCodes.push(neutralColor);
+                    box.textContent = `${neutralColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+
+        </script>
+    </body>
+</html>
