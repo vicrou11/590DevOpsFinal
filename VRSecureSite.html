@@ -38,7 +38,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                 max-width: 300px;
             }
             .titleBox {
-                margin: auto;
+                margin: 10px;
                 position: relative;
                 text-align: center;
                 border-radius: 10px;
@@ -46,6 +46,19 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
             }
             .buttonContainer {
                 padding: 3px;
+            }
+            .fileNameText {
+                border: 1px;
+                width: 175px;
+                height: 50px;
+                border-radius: 10px;
+                background-color: #faf0e6;
+            }
+            .fileNameText::-webkit-input-placeholder {
+                font-family: 'Georgia', serif;
+            }
+            .fileNameText::-moz-placeholder {
+                font-family: 'Georgia', serif;
             }
         </style>
     
@@ -55,6 +68,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
         </div>
         <div class="buttonContainer">
             <button id="testButton" class="bigButton" onclick="getPalette()">Generate!</button>
+            <input id="fileNameText" class="fileNameText" type="text" placeholder="Enter File Name To Save"></input>
             <button id="saveButton" class="bigButton" onclick="savePalette()">Save!</button>
         </div>
 
@@ -80,6 +94,9 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
             <button id="redButton" class="bigButton" onclick="getRedPalette()">Mostly Red</button>
             <button id="blueButton" class="bigButton" onclick="getBluePalette()">Mostly Blue</button>
             <button id="greenButton" class="bigButton" onclick="getGreenPalette()">Mostly Green</button>
+            <input type="text" id="inputHue" placeholder="#000000">
+            <button id="hueButton" class="bigButton" onclick="getHuePalette()">Based On Color</button>
+
         </div>
 
         <script>
@@ -127,6 +144,29 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                 };
             }
             
+            function rgbToHsl(r, g, b){
+                r /= 255, g /= 255, b /= 255;
+                var max = Math.max(r, g, b), min = Math.min(r, g, b);
+                var h, s, l = (max + min) / 2;
+
+                if(max == min){
+                    h = s = 0; // achromatic
+                }
+
+                else{
+                    var d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    switch(max){
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+                console.log(`${h} ${s} ${l}`)
+                return {h, s, l};
+            }
+
             function generateColor() {
                 //hexCharacters
                 const hexCharacters = [0,1,2,3,4,5,6,7,8,9,"A","B","C","D","E","F"];
@@ -208,10 +248,20 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                 const canvas = document.getElementById('paletteBox');
                 html2canvas(canvas).then(canvas => {
                 const dataURL = canvas.toDataURL('image/png');
+
+                const fileNameBox = document.getElementById('fileNameText');
+                const fileName = fileNameBox.value;
         
                 const downloadLink = document.createElement('a');
                 downloadLink.href = dataURL;
-                downloadLink.download = 'newcolorpalette.png';
+                
+                if (fileName) {
+                    if (fileName[0] == '<')
+                        downloadLink.download = 'newcolorpalette.png';
+                    else
+                        downloadLink.download = `${fileName}.png`;
+                } else
+                    downloadLink.download = 'newcolorpalette.png';
         
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
@@ -336,7 +386,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                 const saturation = Math.floor(Math.random() * 21) + 10; // 10 to 30
                 const hue = Math.floor(Math.random() * 45) + 0;
                 
-                const { r, g, b } = hslToRgb(hue/360, saturation/100, lightness/100);
+                const {r, g, b} = hslToRgb(hue/360, saturation/100, lightness/100);
                 
                 const neutralColor = rgbToHex(r, g, b);
                 return neutralColor;
@@ -353,6 +403,63 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                     box.textContent = `${neutralColor}`;
                 });
                 displayColorCodes(colorCodes);
+            }
+
+            function getHuePalette() {
+                const boxes = document.querySelectorAll('.box');
+                const colorCodes = [];
+
+                boxes.forEach((box) => {
+                    const hueColor = generateHues();
+                    box.style.backgroundColor = hueColor;
+                    box.textContent = `${hueColor}`;
+                });
+                displayColorCodes(colorCodes);
+            }
+
+            function generateHues() {
+                const rawHueElement = document.getElementById('inputHue').value; //'#c7d92c'
+                let rawHue = rawHueElement;
+                if (rawHueElement) {
+                    if (rawHueElement[0] == '<')
+                        rawHue = '#c7d92c';
+                    else
+                        rawHue = rawHueElement;
+                } else 
+                    rawHue = '#c7d92c';
+
+                var r1 = parseInt(rawHue.substr(1,2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
+                var g1 = parseInt(rawHue.substr(3,2), 16);
+                var b1 = parseInt(rawHue.substr(5,2), 16);
+
+                const {h, s, l} = rgbToHue(r1, g1, b1)
+                const {r, g, b} = hslToRgb(h/360, s/100, l/100)
+                const hueColor = rgbToHex(r, g, b);
+                return hueColor;
+            }
+
+            function rgbToHue(r, g, b){
+                r /= 255, g /= 255, b /= 255;
+                var max = Math.max(r, g, b), min = Math.min(r, g, b);
+                var h, s, l = (max + min) / 2;
+
+                if(max == min){
+                    h = s = 0; // achromatic
+                }
+
+                else{
+                    var d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    switch(max){
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+                var s = Math.random() * 101;
+                var l = Math.random() * 101;
+                return {h, s, l};
             }
 
         </script>
